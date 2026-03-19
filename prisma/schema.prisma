@@ -1,0 +1,144 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum Role {
+  FREELANCER
+  CLIENT
+}
+
+enum ServiceStatus {
+  ACTIVE
+  PAUSED
+  DELETE
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model user {
+  id                Int                 @id @default(autoincrement())
+  email             String              @unique
+  password          String?
+  name              String
+  avatar_url        String?
+  role              Role                @default(CLIENT)
+  joined_at         DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  oauthAccounts     oauth_account?
+  refreshToken      refresh_token?
+  freelancerProfile freelancer_profile?
+  orders            orders[]
+  reviews           review[]
+}
+
+model oauth_account {
+  id          Int      @id @default(autoincrement())
+  user        user     @relation(fields: [user_id], references: [id])
+  user_id     Int      @unique
+  provider    String   @unique
+  provider_id String   @unique
+  created_at  DateTime @default(now())
+}
+
+model refresh_token {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  user       user     @relation(fields: [user_id], references: [id])
+  user_id    Int      @unique
+  expires_at DateTime
+  created_at DateTime @default(now())
+}
+
+model freelancer_profile {
+  id               Int                @id @default(autoincrement())
+  user             user               @relation(fields: [user_id], references: [id])
+  user_id          Int                @unique
+  bio              String?
+  tagline          String?
+  location         String?
+  avg_rating       Float              @default(0)
+  total_review     Int                @default(0)
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  freelancerSkills freelancer_skill[]
+  services         service[]
+  orders           orders[]
+  reviews          review[]
+}
+
+model freelancer_skill {
+  id                    Int                @id @default(autoincrement())
+  freelancer_profile    freelancer_profile @relation(fields: [freelancer_profile_id], references: [id])
+  freelancer_profile_id Int
+  skill                 String
+}
+
+model category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  slug     String    @unique
+  icon_url String?
+  services service[]
+}
+
+model service {
+  id                    Int                @id @default(autoincrement())
+  freelancer_profile    freelancer_profile @relation(fields: [freelancer_profile_id], references: [id])
+  freelancer_profile_id Int
+  category              category           @relation(fields: [category_id], references: [id])
+  category_id           Int
+  title                 String
+  description           String?
+  cover_image_url       String?
+  price                 Float
+  delivery_days         Int
+  status                ServiceStatus      @default(ACTIVE)
+  created_at            DateTime           @default(now())
+  updated_at            DateTime           @updatedAt
+  orders                orders[]
+}
+
+model orders {
+  id                    Int                @id @default(autoincrement())
+  service               service            @relation(fields: [service_id], references: [id])
+  service_id            Int
+  client                user               @relation(fields: [client_id], references: [id])
+  client_id             Int
+  freelancer_profile    freelancer_profile @relation(fields: [freelancer_profile_id], references: [id])
+  freelancer_profile_id Int
+  status                OrderStatus        @default(PENDING)
+  price_at_order        Float
+  note                  String?
+  due_date              DateTime
+  created_at            DateTime           @default(now())
+  updated_at            DateTime           @updatedAt
+  reviews               review?
+}
+
+model review {
+  id                    Int                @id @default(autoincrement())
+  order                 orders             @relation(fields: [orders_id], references: [id])
+  orders_id             Int                @unique
+  client                user               @relation(fields: [user_id], references: [id])
+  user_id               Int
+  freelancer_profile    freelancer_profile @relation(fields: [freelancer_profile_id], references: [id])
+  freelancer_profile_id Int
+  rating                Int
+  comment               String?
+  created_at            DateTime           @default(now())
+}
