@@ -50,7 +50,7 @@ model oauth_account {
   id          Int      @id @default(autoincrement())
   user        user     @relation(fields: [user_id], references: [id])
   user_id     Int      @unique
-  provider    String   @unique
+  provider    String
   provider_id String   @unique
   created_at  DateTime @default(now())
 }

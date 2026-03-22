@@ -28,6 +28,7 @@
     "paths": {
       "@/*": ["./*"]
     },
+    "typeRoots": ["./node_modules/@types", "./types"],
 
     // Style Options
     // "noImplicitReturns": true,
@@ -45,5 +46,6 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true
-  }
+  },
+  "include": ["**/*.ts"]
 }
