@@ -10,10 +10,15 @@ import { categoryRouter } from "./Routes/category.route";
 import { serviceRouter } from "./Routes/service.route";
 import { orderRouter } from "./Routes/order.route";
 import { reviewRouter } from "./Routes/review.route";
+import cookieParser from "cookie-parser";
+import { uploadRouter } from "./Routes/upload.route";
+import { openApiSpec } from "./Config/openApi";
+import { apiReference } from "@scalar/express-api-reference";
 
 const app = express();
 const PORT = process.env.PORT! as string;
 
+app.use(cookieParser());
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
@@ -22,6 +27,9 @@ app.use(
     credentials: true,
   })
 );
+app.get("/openapi.json", (_req, res) => {
+  res.json(openApiSpec);
+});
 
 app.use(express.json());
 app.use(passport.initialize());
@@ -34,7 +42,23 @@ app.use(
   categoryRouter,
   serviceRouter,
   orderRouter,
-  reviewRouter
+  reviewRouter,
+  uploadRouter
+);
+
+app.use(
+  "/docs",
+  apiReference({
+    theme: "default",
+    layout: "modern",
+    spec: {
+      url: "/openapi.json",
+    },
+    defaultHttpClient: {
+      targetKey: "js",
+      clientKey: "fetch",
+    },
+  })
 );
 
 app.listen(PORT, () => {

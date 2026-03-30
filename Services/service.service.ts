@@ -185,3 +185,39 @@ export const UpdateMyServiceStatusService = async ({
     return null;
   }
 };
+
+export const SearchServicesService = async (query: string) => {
+  try {
+    const results = await prisma.service.findMany({
+      where: {
+        status: "ACTIVE",
+        OR: [
+          { title: { contains: query } },
+          { description: { contains: query } },
+        ],
+      },
+      select: {
+        id: true,
+        title: true,
+        cover_image_url: true,
+        price: true,
+        delivery_days: true,
+        category: { select: { name: true, slug: true } },
+        freelancer_profile: {
+          select: {
+            avg_rating: true,
+            total_review: true,
+            user: { select: { name: true, avatar_url: true } },
+          },
+        },
+      },
+      take: 10,
+      orderBy: { created_at: "desc" },
+    });
+
+    return results;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};

@@ -69,6 +69,9 @@ export const GetMyOrdersService = async (clientId: number) => {
             avg_rating: true,
           },
         },
+        reviews: {
+          select: { id: true },
+        },
       },
       orderBy: { created_at: "desc" },
     });

@@ -109,3 +109,40 @@ export const DeleteSkillService = async ({ skillId }: { skillId: number }) => {
     return null;
   }
 };
+
+export const GetFreelancerByNameService = async (name: string) => {
+  try {
+    const profile = await prisma.freelancer_profile.findFirst({
+      where: {
+        user: {
+          name: {
+            equals: name,
+          },
+        },
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            avatar_url: true,
+            joined_at: true,
+          },
+        },
+        freelancerSkills: true,
+        services: {
+          where: { status: "ACTIVE" },
+          include: {
+            category: {
+              select: { name: true, slug: true },
+            },
+          },
+        },
+      },
+    });
+
+    return profile;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};

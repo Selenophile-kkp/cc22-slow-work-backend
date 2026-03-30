@@ -3,6 +3,7 @@ import {
   GetAllServiceController,
   GetMyServicesController,
   GetServiceByIdController,
+  SearchServicesController,
   UpdateMyServiceController,
   UpdateMyServiceStatusController,
 } from "@/Controllers/service.controller";
@@ -13,6 +14,7 @@ import express from "express";
 export const serviceRouter = express.Router();
 
 serviceRouter.get("/services", GetAllServiceController);
+serviceRouter.get("/services/search", SearchServicesController);
 serviceRouter.get("/services/:id", GetServiceByIdController);
 serviceRouter.get(
   "/services/me",

@@ -3,6 +3,7 @@ export interface RegisterProps {
   password: string;
   name: string;
   avatar_url?: string;
+  role?: "CLIENT" | "FREELANCER";
 }
 
 export interface LoginProps {

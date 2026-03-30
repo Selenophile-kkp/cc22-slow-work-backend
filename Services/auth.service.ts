@@ -15,6 +15,7 @@ export const RegisterService = async ({
   password,
   name,
   avatar_url,
+  role = "CLIENT",
 }: RegisterProps) => {
   try {
     const findUser = await prisma.user.findFirst({
@@ -30,10 +31,17 @@ export const RegisterService = async ({
         email,
         password: hashPw,
         name,
+        role,
         ...(avatar_url !== undefined && { avatar_url }),
         joined_at: new Date(),
       },
     });
+
+    if (role === "FREELANCER") {
+      await prisma.freelancer_profile.create({
+        data: { user_id: newUser.id },
+      });
+    }
 
     return newUser;
   } catch (error) {
@@ -172,4 +180,49 @@ export const GoogleCallbackService = async (claims: ClaimsProps) => {
   return {
     redirect: `${process.env.CLIENT_URL}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken.token}`,
   };
+};
+
+export const DeleteUserService = async (userId: number) => {
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.review.deleteMany({ where: { user_id: userId } });
+
+      const profile = await tx.freelancer_profile.findUnique({
+        where: { user_id: userId },
+      });
+
+      if (profile) {
+        await tx.review.deleteMany({
+          where: { freelancer_profile_id: profile.id },
+        });
+
+        await tx.orders.deleteMany({
+          where: { freelancer_profile_id: profile.id },
+        });
+
+        await tx.service.deleteMany({
+          where: { freelancer_profile_id: profile.id },
+        });
+
+        await tx.freelancer_skill.deleteMany({
+          where: { freelancer_profile_id: profile.id },
+        });
+
+        await tx.freelancer_profile.delete({ where: { user_id: userId } });
+      }
+
+      await tx.orders.deleteMany({ where: { client_id: userId } });
+
+      await tx.refresh_token.deleteMany({ where: { user_id: userId } });
+
+      await tx.oauth_account.deleteMany({ where: { user_id: userId } });
+
+      await tx.user.delete({ where: { id: userId } });
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("DeleteUserService error:", error);
+    return { success: false };
+  }
 };

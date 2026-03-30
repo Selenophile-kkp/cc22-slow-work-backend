@@ -2,6 +2,7 @@ import {
   CreateSkillsService,
   DeleteSkillService,
   EditFreelancerService,
+  GetFreelancerByNameService,
   GetFreelancerService,
 } from "@/Services/freelancer.service";
 import type { Request, Response } from "express";
@@ -79,5 +80,27 @@ export const DeleteSkillController = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json("Internal server error!!!");
+  }
+};
+
+export const GetFreelancerByNameController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const name = decodeURIComponent(req.params.name as string);
+
+    if (!name || name.trim() === "")
+      return res.status(400).json({ message: "Name is required." });
+
+    const profile = await GetFreelancerByNameService(name);
+
+    if (!profile)
+      return res.status(404).json({ message: "Freelancer not found." });
+
+    return res.status(200).json(profile);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error." });
   }
 };

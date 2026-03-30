@@ -51,6 +51,7 @@ export const ValidateAccessToken = (
 
     return decoded as ClaimsProps;
   } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) return null;
     console.error(error);
     return null;
   }

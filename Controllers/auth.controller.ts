@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import {
+  DeleteUserService,
   GoogleCallbackService,
   LoginService,
   RefreshTokenService,
@@ -28,16 +29,22 @@ const getAccessTokenCookieOptions = () => ({
 });
 
 export const RegisterController = async (req: Request, res: Response) => {
-  const { email, password, name, avatar_url } = req.body;
+  const { email, password, name, avatar_url, role } = req.body;
 
   if (!email || !password || !name) {
     return res.status(400).json({ message: "Missing required fields." });
   }
 
+  // Validate roles, only accepts if these matched.
+  const validRoles = ["CLIENT", "FREELANCER"];
+  const resolvedRole: "CLIENT" | "FREELANCER" =
+    role && validRoles.includes(role) ? role : "CLIENT";
+
   const result = await RegisterService({
     email,
     password,
     name,
+    role: resolvedRole,
     ...(avatar_url !== undefined && { avatar_url }),
   });
 
@@ -116,19 +123,50 @@ export const RefreshTokenController = async (req: Request, res: Response) => {
 
 export const LogoutController = async (_req: Request, res: Response) => {
   res.clearCookie(refreshTokenCookies, { path: "/" });
+  res.clearCookie(accessTokenCookies, { path: "/" });
   return res.status(200).json({ message: "Logged out successfully." });
 };
 
 // Oauth
 export const GoogleCallbackController = async (req: Request, res: Response) => {
-  const user = req.user as {
-    userId: number;
+  const dbUser = req.user as unknown as {
+    id: number;
     email: string;
     name: string;
     role: string;
+    avatar_url: string | null;
   };
 
-  const google = await GoogleCallbackService(user);
+  if (!dbUser) {
+    return res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_failed`);
+  }
 
-  return res.redirect(google.redirect);
+  const result = await GoogleCallbackService({
+    userId: dbUser.id,
+    email: dbUser.email,
+    name: dbUser.name,
+    role: dbUser.role as "CLIENT" | "FREELANCER",
+  });
+
+  return res.redirect(result.redirect);
+};
+
+export const DeleteUserController = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user!.userId;
+    const result = await DeleteUserService(userId);
+
+    if (!result.success) {
+      return res
+        .status(500)
+        .json({ message: "Failed to delete account. Please try again." });
+    }
+
+    res.clearCookie("refresh-token", { path: "/" });
+
+    return res.status(200).json({ message: "Account deleted successfully." });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
 };

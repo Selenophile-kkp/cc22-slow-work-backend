@@ -4,6 +4,7 @@ import {
   GetAllServicesService,
   GetMyServicesService,
   GetServiceByIdService,
+  SearchServicesService,
   UpdateMyServiceService,
   UpdateMyServiceStatusService,
 } from "@/Services/service.service";
@@ -143,6 +144,22 @@ export const UpdateMyServiceStatusController = async (
         .json({ message: "Service not found or unauthorized." });
 
     return res.status(200).json(service);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+export const SearchServicesController = async (req: Request, res: Response) => {
+  try {
+    const query = req.query.q as string;
+
+    if (!query || query.trim() === "")
+      return res.status(400).json({ message: "Query param 'q' is required." });
+
+    const results = await SearchServicesService(query.trim());
+
+    return res.status(200).json(results);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal server error." });

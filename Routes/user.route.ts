@@ -11,14 +11,13 @@ const userRouter = express.Router();
 userRouter.get(
   "/user/me",
   VerifyUser,
-  RequireRole(Role.CLIENT),
+  RequireRole(Role.CLIENT, Role.FREELANCER),
   GetUserController
 );
-
 userRouter.patch(
   "/user/update",
   VerifyUser,
-  RequireRole(Role.CLIENT),
+  RequireRole(Role.CLIENT, Role.FREELANCER),
   EditUerController
 );
 

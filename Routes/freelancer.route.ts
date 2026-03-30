@@ -5,11 +5,16 @@ import {
   CreateSkillController,
   DeleteSkillController,
   EditFreelancerController,
+  GetFreelancerByNameController,
   GetFreelancerController,
 } from "@/Controllers/freelancer.controller";
 
 export const freelancerRouter = express.Router();
 
+freelancerRouter.get(
+  "/freelancer/profile/:name",
+  GetFreelancerByNameController
+);
 freelancerRouter.get("/freelancer/:id", GetFreelancerController);
 freelancerRouter.patch(
   "/freelancer/me",
